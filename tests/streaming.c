@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 #include "shout/shout.h"
 
 
@@ -17,7 +16,7 @@ int main()
 
 	shout_set_host(shout, "127.0.0.1");
 	shout_set_protocol(shout, SHOUT_PROTOCOL_HTTP);
-	shout_set_port(shout, 8001);
+	shout_set_port(shout, 8002);
 	
 	shout_set_mount(shout, "/main.mp3");
 	shout_set_user(shout, "mainn");
@@ -30,36 +29,53 @@ int main()
 	{
 	
 		total = 0;
-		FILE *audio_file = fopen("/home/finn/Music/audio.mp3", "r");
+		
+		char *audio_files[] = {
+			"/home/finn/Music/audio.mp3",
+			"/home/finn/Music/citylove.mp3"
+		};
 
-		while (1)
+		int playlist_size = sizeof(audio_files);
+
+
+		for (int i = 0; i <= playlist_size; i++)
 		{
+			printf(audio_files[i]);
+		
+			// load file
+			FILE *audio = fopen( audio_files[i], "r" );
 
-			read = fread(buffer, 1, sizeof(buffer), audio_file);
-			total = total + read;
-
-			if (read > 0)
+			while (1)
 			{
+			
+				read = fread (buffer, 1, sizeof(buffer), audio);
+				total = total + read;
 
-				ret = shout_send(shout, buffer, read);
-				if (ret != SHOUTERR_SUCCESS)
+				if ( read > 0 )
 				{
-					printf("Error: %s\n", shout_get_error(shout));
-					break;
+				
+					ret = shout_send (shout, buffer, read);
+					if ( ret != SHOUTERR_SUCCESS )
+						printf("Error: %s\n", shout_get_error(shout));
+
+					
+				
 				}
+
+				else
+					break;
+
+				shout_sync(shout);
 
 			}
 
-			else
-				break;
-
-			shout_sync(shout);
 
 		}
 
+		shout_close(shout);
+		
 	}
 
-	shout_close(shout);
 	return 0;
 
 }
