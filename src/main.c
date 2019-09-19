@@ -7,11 +7,20 @@
  *
  */
 
+#include <string.h>
+#include <stdio.h>
+
 #include "configuration.h"
+struct json_object *config;
+
+#include "debug.h"
+
 
 int main ()
 {
 
+	config = read_configuration();
+	i_output ("Arizona", "ok");
 	return 0;
 
 }

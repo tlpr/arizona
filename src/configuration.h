@@ -20,7 +20,7 @@ struct json_object *read_configuration ()
 	// Check if the file exists.
 	if ( access( config_file_path, F_OK ) == -1 )
 	{
-		printf("Couldn't find the configuration file. Exiting...");
+		printf("Couldn't find the configuration file. Exiting...\n");
 		exit(0);
 	}
 
@@ -28,7 +28,7 @@ struct json_object *read_configuration ()
 	FILE *config_file_obj = fopen(config_file_path, "r");
 	if ( !config_file_obj )
 	{
-		printf("Could not read the configuration file. Exiting...");
+		printf("Could not read the configuration file. Exiting...\n");
 		exit(0);
 	}
 	
@@ -54,14 +54,12 @@ struct json_object *read_configuration ()
 }
 
 
-//int main ()
-//{
-//
-//	struct json_object *configuration = read_configuration();
-//	struct json_object *tmp;
-//	json_object_object_get_ex(configuration, "testing", &tmp);
-//	printf ("---\n%s\n---\n", json_object_to_json_string(tmp) );
-//	return 0;
-//
-//}
+char *get_value_from_json ( struct json_object *configuration, char* key )
+{
+
+	struct json_object *tmp;
+	json_object_object_get_ex(configuration, key, &tmp);
+	return (char*)json_object_to_json_string(tmp);
+
+}
 
