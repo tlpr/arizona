@@ -1,0 +1,11 @@
+{
+
+	"db-host": "127.0.0.1",
+	"db-name": "tlpr-dev",
+	"db-user": "root",
+	"db-pass": "123456",
+
+	"song-play-mode": "alphabetical"
+
+}
+
