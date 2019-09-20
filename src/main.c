@@ -14,13 +14,17 @@
 struct json_object *config;
 
 #include "debug.h"
-
+#include "version.h"
 
 int main ()
 {
 
 	config = read_configuration();
-	i_output ("Arizona", "ok");
+
+	char mesg[30];
+	sprintf(mesg, "Running Arizona version %s", VERSION);
+	i_output (mesg, "ok");
+
 	return 0;
 
 }

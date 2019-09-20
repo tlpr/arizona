@@ -26,26 +26,27 @@ void i_output ( char *message, char *status )
 
 	char *prefixes[] = {"", "", ""};
 
-
-	// sprintf() causes segmentation fault, temporary workaround is disabling colors.
-	color = 0;
-	// --- --- --- ---
-
 	if ( color )
 	{
 
-	//	-- TO BE FIXED (:30) --
-	//	sprintf( prefixes[0], "[Warn] " );
-	//	sprintf( prefixes[1], "[Err] " );
-	//	sprintf( prefixes[2], "[OK] " );
+		char tmp[9];
+
+		sprintf( tmp, "%s%s[ Warn ]%s ", colors[4], colors[1], colors[0] );
+		prefixes[0] = tmp;
+
+		sprintf( tmp, "%s%s[ Err ]%s ", colors[2], colors[1], colors[0] );
+		prefixes[1] = tmp;
+
+		sprintf( tmp, "%s%s[ OK ]%s ", colors[3], colors[1], colors[0] );
+		prefixes[2] = tmp;
 
 	}
 
 	else
 	{
-		prefixes[0] = "[Warning] ";
-		prefixes[1] = "[Error] ";
-		prefixes[2] = "[OK] ";
+		prefixes[0] = "[ Warn ] ";
+		prefixes[1] = "[ Err ] ";
+		prefixes[2] = "[ OK ] ";
 
 	}
 
