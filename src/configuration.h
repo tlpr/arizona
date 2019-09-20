@@ -16,6 +16,7 @@ struct json_object *read_configuration ()
 {
 
 	char *config_file_path = "cfg.json";
+	printf ("Starting using config located on %s\n", config_file_path);
 
 	// Check if the file exists.
 	if ( access( config_file_path, F_OK ) == -1 )
@@ -49,6 +50,8 @@ struct json_object *read_configuration ()
 	struct json_object *config_file_json;
 	config_file_json = json_tokener_parse(buffer);
 
+	printf("%s\n", "Read configuration.");
+
 	return config_file_json;
 
 }
@@ -59,7 +62,7 @@ char *get_value_from_json ( struct json_object *configuration, char* key )
 
 	struct json_object *tmp;
 	json_object_object_get_ex(configuration, key, &tmp);
-	return (char*)json_object_to_json_string(tmp);
+	return (char*)json_object_get_string(tmp);
 
 }
 

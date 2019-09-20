@@ -29,6 +29,9 @@ int main ()
 	i_output (mesg, "ok");
 
 	queue_init();
+	char *next_song;
+	next_song = get_next_song();
+	printf("%s\n", next_song);
 
 	return 0;
 

@@ -6,6 +6,7 @@
 	"db-name": "tlpr-dev",
 	"db-user": "root",
 	"db-pass": "123456",
+	"db-port": 3306,
 
 	"song-play-mode": "alphabetical"
 
