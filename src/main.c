@@ -15,6 +15,9 @@ struct json_object *config;
 
 #include "debug.h"
 #include "version.h"
+#include "queue.h"
+#include "stream.h"
+
 
 int main ()
 {
@@ -24,6 +27,8 @@ int main ()
 	char mesg[30];
 	sprintf(mesg, "Running Arizona version %s", VERSION);
 	i_output (mesg, "ok");
+
+	queue_init();
 
 	return 0;
 
