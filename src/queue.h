@@ -38,7 +38,11 @@ void queue_init ()
 	i_output(dmesg, "warning");
 
 	if ( mysql_real_connect( connection, db_host, db_user, db_pass, db_name, db_port, NULL, 0 ) == NULL )
+	{
 		i_output("Could not connect to the MySQL server.", "error");
+		exit(0);
+	}
+
 	else
 		i_output("Connected to MySQL!", "ok");
 
@@ -67,29 +71,22 @@ char* get_next_song ()
 
 	}
 
-	MYSQL_FIELD *fields;
-	unsigned int num_fields;
+	MYSQL_ROW row;
+	int i_array = 0;
 
-	num_fields = mysql_num_fields(result);
-	fields = mysql_fetch_fields(result);
-
-	for (int i = 0; i < num_fields; i++)
-		printf("Field %u is %s\n", i, fields[i].name);
-
-	//MYSQL_ROW row;
-	//int i_array = 0;
-
-	//int num_fields = mysql_num_fields (result);
-	//while ( (row = mysql_fetch_row (result)) )
-	//{
+	int num_fields = mysql_num_fields (result);
+	while ( (row = mysql_fetch_row (result)) )
+	{
 	
-	//	for ( int i = 0; i < num_fields; i++ )
-	//		sprintf (&next_song[i_array][0], "%s", row[i]);
-	//	i_array++;
+		for ( int i = 0; i < num_fields; i++ )
+		{
+			sprintf (&next_song[i_array][0], "%s", row[i]);
+			i_array++;
+		}
 
-	//}
+	}
 
-	//return &next_song[0][1];
+	return &next_song[1][0];
 
 }
 

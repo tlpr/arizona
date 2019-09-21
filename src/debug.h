@@ -13,7 +13,7 @@ void i_output ( char *message, const char *status )
 {
 
 	char *use_color = get_value_from_json(config, "color");
-	color = ( use_color - "0" );
+	color = atoi(use_color);
 
 	// Bash colors
 	// 0 - Reset, 1 - Bold,
