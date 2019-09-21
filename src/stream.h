@@ -120,7 +120,7 @@ void run_stream ()
 		sprintf(dmesg, "Playing %s%s", audio_dir, songs[i]);
 		i_output(dmesg, "ok");
 
-		char *full_path = malloc( 6 + strlen(songs[i]) + 1 );
+		char *full_path = malloc( 6 + strlen(audio_dir) + strlen(songs[i]) + 1 );
 		strcpy(full_path, audio_dir);
 		strcat(full_path, songs[i]);
 
