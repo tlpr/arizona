@@ -22,7 +22,9 @@
 
 	"3": "Playback setup",
 	"song-play-mode": "alphabetical",
-	"use-mysql": 1
+	"use-mysql": 1,
+	"audio-directory": "music/",
+	"repeat": 1
 
 }
 

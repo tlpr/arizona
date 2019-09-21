@@ -52,18 +52,9 @@ int main ()
 	else
 		i_output("use-mysql in cfg.json is disabled, skipping MySQL init...", "warning");
 
-	
-	char **files;
-	size_t count;
-	count = read_directory("/home/finn", &files);
-
-	printf("Dirtest: %s\n", files[0]);
-
 	// Icecast
 	stream_init();
 	run_stream();
-
-	//read_directory(".");
 
 	return 0;
 

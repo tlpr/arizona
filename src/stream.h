@@ -22,7 +22,7 @@ void stream_init ()
 	char* icecast_pass = get_value_from_json (config, "shout-pass");
 	char* icecast_frmt = get_value_from_json (config, "shout-frmt");
 	char* icecast_mnt  = get_value_from_json (config, "shout-mnt" );
-	
+
 	char dmesg[100];
 
 	// Print out the warning
@@ -69,10 +69,6 @@ void stream_init ()
 void run_stream ()
 {
 
-	//
-	// fixme: PLAYS (null) AFTER FIRST FILE
-	//
-
 	char dmesg[100];
 
 	int sopen_status = shout_open(shout);
@@ -87,26 +83,46 @@ void run_stream ()
 	int ret;
 
 	char *play_mode = get_value_from_json(config, "song-play-mode");
-	sprintf(dmesg, "Selected play mode: %s\n", play_mode);
+	sprintf(dmesg, "Selected play mode: %s", play_mode);
 	i_output(dmesg, "ok");
+
+	char *audio_dir = get_value_from_json(config, "audio-directory");
+	char *repeat_str = get_value_from_json(config, "repeat");
+
+	int repeat = atoi(repeat_str);
+	free(repeat_str);
 
 	char **songs;
 	size_t song_count;
 
-	i_output("Reading music/ directory..", "warning");
-	song_count = read_directory("music/", &songs);
+	song_count = read_directory(audio_dir, &songs);
+	sprintf(dmesg, "Found %zu files in \"%s\"", song_count, audio_dir);
+	i_output(dmesg, "ok");
 
-	for ( int i = 0; i <= sizeof(songs); i++ )
+	for ( int i = 0; i <= song_count; i++ )
 	{
-	
-		sprintf(dmesg, "Playing music/%s", songs[i]);
+
+		if ( songs[i] == NULL )
+		{
+			if (repeat)
+			{
+				i_output("Encountered end of playlist. Repeating...", "ok");
+				i = -1; continue;
+			}
+
+			else
+			{
+				i_output("Encountered end of playlist and repeat is disabled.", "ok");
+				break;
+			}
+		}
+
+		sprintf(dmesg, "Playing %s%s", audio_dir, songs[i]);
 		i_output(dmesg, "ok");
 
 		char *full_path = malloc( 6 + strlen(songs[i]) + 1 );
-		strcpy(full_path, "music/");
+		strcpy(full_path, audio_dir);
 		strcat(full_path, songs[i]);
-
-		i_output("Got the full path!", "warning");
 
 		FILE *audio = fopen( full_path, "r" );
 		free(full_path);
@@ -134,9 +150,16 @@ void run_stream ()
 		}
 
 		fclose (audio);
+
+		if ( i == song_count )
+		{
+			i_output("Reached the end of playlist. Repeating...", "ok");
+			i = 0;
+		}
 	
 	}
 
+	i_output("Closing stream.", "ok");
 	shout_close (shout);
 
 }
