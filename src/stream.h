@@ -26,17 +26,9 @@ void stream_init ()
 	char dmesg[100];
 
 	// Print out the warning
-	char ic_pass_starred[150];
-	int i = 0;
-	while (icecast_pass[i] != '\0')
-	{
-		ic_pass_starred[i] = '*';
-		i++;
-	}
-
 	sprintf(
-		dmesg, "Initializing libshout using http://%s:%s@%s:%s%s",
-		icecast_user, ic_pass_starred, icecast_host, icecast_pstr, icecast_mnt
+		dmesg, "Initializing libshout using http://%s:xxxx@%s:%s%s",
+		icecast_user, icecast_host, icecast_pstr, icecast_mnt
 	);
 
 	i_output(dmesg, "warning");
@@ -70,6 +62,82 @@ void stream_init ()
 		i_output("Unknown format.", "error");
 		exit(0);
 	}
+
+}
+
+
+void run_stream ()
+{
+
+	//
+	// fixme: PLAYS (null) AFTER FIRST FILE
+	//
+
+	char dmesg[100];
+
+	int sopen_status = shout_open(shout);
+	if ( sopen_status != SHOUTERR_SUCCESS )
+	{
+		i_output("An error occured while connecting to Icecast. (maybe wrong data?)", "error");
+		exit(0);
+	}
+
+	unsigned char buffer[4096];
+	size_t read, total;
+	int ret;
+
+	char *play_mode = get_value_from_json(config, "song-play-mode");
+	sprintf(dmesg, "Selected play mode: %s\n", play_mode);
+	i_output(dmesg, "ok");
+
+	char **songs;
+	size_t song_count;
+
+	i_output("Reading music/ directory..", "warning");
+	song_count = read_directory("music/", &songs);
+
+	for ( int i = 0; i <= sizeof(songs); i++ )
+	{
+	
+		sprintf(dmesg, "Playing music/%s", songs[i]);
+		i_output(dmesg, "ok");
+
+		char *full_path = malloc( 6 + strlen(songs[i]) + 1 );
+		strcpy(full_path, "music/");
+		strcat(full_path, songs[i]);
+
+		i_output("Got the full path!", "warning");
+
+		FILE *audio = fopen( full_path, "r" );
+		free(full_path);
+		
+		while (1)
+		{
+		
+			read = fread( buffer, 1, sizeof(buffer), audio );
+			total = total + read;
+
+			if ( read > 0 )
+			{
+				
+				ret = shout_send (shout, buffer, read);
+				if (ret != SHOUTERR_SUCCESS)
+					i_output("An error occured while sending buffer.", "error");
+
+			}
+
+			else
+				break;
+
+			shout_sync(shout);
+
+		}
+
+		fclose (audio);
+	
+	}
+
+	shout_close (shout);
 
 }
 
