@@ -7,13 +7,16 @@
  *
  */
 
-int color;
+int color, warnings_disabled;
 
 void i_output ( char *message, const char *status )
 {
 
 	char *use_color = get_value_from_json(config, "color");
 	color = atoi(use_color);
+
+	char *silence_warnings_str = get_value_from_json(config, "silence-warnings");
+	warnings_disabled = atoi(silence_warnings_str);
 
 	// Bash colors
 	// 0 - Reset, 1 - Bold,
@@ -68,7 +71,8 @@ void i_output ( char *message, const char *status )
 		sprintf(message_ready, "%s%s\n", prefixes[2], message);
 
 
-	printf("%s", message_ready);
+	if ( !warnings_disabled || is_warning )
+		printf("%s", message_ready);
 
 }
 

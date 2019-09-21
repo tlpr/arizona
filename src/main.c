@@ -9,6 +9,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <shout/shout.h>
 
 #include "configuration.h"
 struct json_object *config;
@@ -24,13 +25,13 @@ int main ()
 {
 
 	config = read_configuration();
-	
+	sprintf(mesg, "Running Arizona %s", VERSION);
+	i_output(mesg, "ok");	
+
+
 	// Use queue in MySQL database.
 	char* use_mysql_char = get_value_from_json(config, "use-mysql");
 	int use_mysql = atoi(use_mysql_char);
-
-	sprintf(mesg, "Running Arizona version %s", VERSION);
-	i_output(mesg, "ok");
 
 	if ( use_mysql )
 	{
@@ -49,6 +50,10 @@ int main ()
 
 	else
 		i_output("use-mysql in cfg.json is disabled, skipping MySQL init...", "warning");
+
+
+	// Icecast
+	stream_init();
 
 	return 0;
 

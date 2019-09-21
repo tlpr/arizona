@@ -1,15 +1,28 @@
 {
 
+	"0": "Terminal output configuration",
 	"color": 1,
-	"use-mysql": 1,
+	"silence-warnings": 0,
 
+	"1": "Data required to log into MySQL (needed only if use-mysql is enabled)",
 	"db-host": "127.0.0.1",
 	"db-name": "tlpr-dev",
 	"db-user": "root",
 	"db-pass": "123456",
 	"db-port": 3306,
 
-	"song-play-mode": "alphabetical"
+	"2": "Data required to log into Icecast server",
+	"shout-host": "127.0.0.1",
+	"shout-port": 8002,
+
+	"shout-frmt": "MP3",
+	"shout-mnt":  "/main.mp3",
+	"shout-user": "mainn",
+	"shout-pass": "testing1234",
+
+	"3": "Playback setup",
+	"song-play-mode": "alphabetical",
+	"use-mysql": 1
 
 }
 
