@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <shout/shout.h>
+#include <time.h>
 
 #include "configuration.h"
 struct json_object *config;

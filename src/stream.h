@@ -13,9 +13,11 @@ shout_t *shout;
 void stream_init ()
 {
 
+	// Initialize libshout
 	shout_init();
 	shout = shout_new();
 
+	// Get the values from configuration file.
 	char* icecast_host = get_value_from_json (config, "shout-host");
 	char* icecast_pstr = get_value_from_json (config, "shout-port");
 	char* icecast_user = get_value_from_json (config, "shout-user");
@@ -23,9 +25,10 @@ void stream_init ()
 	char* icecast_frmt = get_value_from_json (config, "shout-frmt");
 	char* icecast_mnt  = get_value_from_json (config, "shout-mnt" );
 
+	// Initialize debug string variable.
 	char dmesg[100];
 
-	// Print out the warning
+	// Print out the warning.
 	sprintf(
 		dmesg, "Initializing libshout using http://%s:xxxx@%s:%s%s",
 		icecast_user, icecast_host, icecast_pstr, icecast_mnt
@@ -33,9 +36,11 @@ void stream_init ()
 
 	i_output(dmesg, "warning");
 
+	// Convert char* icecast_pstr to integer icecast_port and free up the space taken by icecast_pstr.
 	int icecast_port = atoi(icecast_pstr);
 	free(icecast_pstr);
 
+	// Put the required data into libshout.
 	shout_set_host(shout, icecast_host);
 	shout_set_port(shout, icecast_port);
 
@@ -69,8 +74,10 @@ void stream_init ()
 void run_stream ()
 {
 
+	// Initialize debug string variable.
 	char dmesg[100];
 
+	// Open Icecast connection.
 	int sopen_status = shout_open(shout);
 	if ( sopen_status != SHOUTERR_SUCCESS )
 	{
@@ -78,27 +85,83 @@ void run_stream ()
 		exit(0);
 	}
 
+	// Initialize required variables.
 	unsigned char buffer[4096];
 	size_t read, total;
 	int ret;
 
+	// Get the required information from the configuration file
 	char *play_mode = get_value_from_json(config, "song-play-mode");
-	sprintf(dmesg, "Selected play mode: %s", play_mode);
-	i_output(dmesg, "ok");
-
 	char *audio_dir = get_value_from_json(config, "audio-directory");
 	char *repeat_str = get_value_from_json(config, "repeat");
 
+	// Convert char* repeat_str to integer repeat and free up the space taken by repeat_str.
 	int repeat = atoi(repeat_str);
 	free(repeat_str);
 
 	char **songs;
 	size_t song_count;
 
+	// Read the contents of specified in the configuration directory.
 	song_count = read_directory(audio_dir, &songs);
 	sprintf(dmesg, "Found %zu files in \"%s\"", song_count, audio_dir);
 	i_output(dmesg, "ok");
 
+
+	char *tmp;
+
+	if ( strcmp(play_mode, "alphabetical") == 0 )
+	{
+
+		for (int i = 0; songs[i]; i++)
+		{
+			for (int j = 0; songs[j]; j++)
+			{
+				if ( strcmp(songs[i], songs[j]) < 0 )
+				{
+				
+					tmp = songs[i];
+					songs[i] = songs[j];
+					songs[j] = tmp;
+
+				}
+			}
+		}
+
+	}
+
+	else if ( strcmp(play_mode, "random") == 0 )
+	{
+	
+		for ( int i = 0; i < song_count; i++ )
+		{
+		
+			srand (time(NULL));
+			int j = rand() % song_count;
+			tmp = songs[j];
+			songs[j] = songs[i];
+			songs[i] = tmp;
+		
+		}
+		
+	}
+
+	else if ( strcmp(play_mode, "none") == 0 ) { } // do nothing if "none"
+
+	else
+	{
+	
+		sprintf(dmesg, "Unknown play mode \"%s\"", play_mode);
+		i_output(dmesg, "error");
+		exit(0);
+
+	}
+
+	sprintf(dmesg, "Using play mode \"%s\"", play_mode);
+	i_output(dmesg, "ok");
+
+
+	// Loop through files in the directory.
 	for ( int i = 0; i <= song_count; i++ )
 	{
 
@@ -106,8 +169,18 @@ void run_stream ()
 		{
 			if (repeat)
 			{
+
 				i_output("Encountered end of playlist. Repeating...", "ok");
+				// If play mode is random reshuffle the array.
+				if ( strcmp(play_mode, "random") )
+				{
+					int j = rand() % song_count;
+					char* tmp = songs[j];
+					songs[j] = songs[i];
+					songs[i] = tmp;	
+				}
 				i = -1; continue;
+
 			}
 
 			else
@@ -124,6 +197,7 @@ void run_stream ()
 		strcpy(full_path, audio_dir);
 		strcat(full_path, songs[i]);
 
+		// Read the file.
 		FILE *audio = fopen( full_path, "r" );
 		free(full_path);
 		

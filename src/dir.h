@@ -9,7 +9,6 @@
 
 #include <dirent.h>
 
-
 size_t read_directory (char *dir_path, char ***directory_listing)
 {
 
