@@ -190,12 +190,25 @@ void run_stream ()
 			}
 		}
 
-		sprintf(dmesg, "Playing %s%s", audio_dir, songs[i]);
-		i_output(dmesg, "ok");
-
 		char *full_path = malloc( 6 + strlen(audio_dir) + strlen(songs[i]) + 1 );
 		strcpy(full_path, audio_dir);
 		strcat(full_path, songs[i]);
+
+		if ( access( full_path, R_OK ) == -1 )
+		{
+			sprintf(dmesg, "File \"%s\" is unreadable.  Skipping...", full_path);
+			i_output(dmesg, "error");
+			free(full_path);
+			if ( songs[ i + 1 ] == NULL )
+				i = -1;
+			continue;
+		}
+
+		else
+		{
+			sprintf(dmesg, "Streaming \"%s\"...", full_path);
+			i_output(dmesg, "ok");
+		}
 
 		// Read the file.
 		FILE *audio = fopen( full_path, "r" );

@@ -15,15 +15,21 @@
 struct json_object *read_configuration ()
 {
 
-	char *config_file_path = "cfg.json";
-	printf ("Starting using config located on %s\n", config_file_path);
+	// Find the configuration file.
+	char *config_file_path;
+	if ( access("./cfg.json", R_OK) != -1 )
+		config_file_path = "./cfg.json";
+	
+	else if ( access("/etc/arizona.json", R_OK) != -1 )
+		config_file_path = "/etc/arizona.json";
 
-	// Check if the file exists.
-	if ( access( config_file_path, F_OK ) == -1 )
+	else
 	{
-		printf("Couldn't find the configuration file. Exiting...\n");
+		printf("[Err]  Error accessing configuration file. Halting.\n");
 		exit(0);
 	}
+
+	printf("Starting with \"%s\"...\n", config_file_path);
 
 	// Read the file and parse JSON.
 	FILE *config_file_obj = fopen(config_file_path, "r");
@@ -49,8 +55,6 @@ struct json_object *read_configuration ()
 
 	struct json_object *config_file_json;
 	config_file_json = json_tokener_parse(buffer);
-
-	printf("%s\n", "Read configuration.");
 
 	return config_file_json;
 
