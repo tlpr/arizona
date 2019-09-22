@@ -12,21 +12,25 @@
 #include <unistd.h>
 
 
-struct json_object *read_configuration ()
+struct json_object *read_configuration (char *config_file_path)
 {
 
 	// Find the configuration file.
-	char *config_file_path;
-	if ( access("./cfg.json", R_OK) != -1 )
-		config_file_path = "./cfg.json";
-	
-	else if ( access("/etc/arizona.json", R_OK) != -1 )
-		config_file_path = "/etc/arizona.json";
-
-	else
+	if ( strcmp(config_file_path, "") == 0 )
 	{
-		printf("[Err]  Error accessing configuration file. Halting.\n");
-		exit(0);
+
+		if ( access("./cfg.json", R_OK) != -1 )
+			config_file_path = "./cfg.json";
+	
+		else if ( access("/etc/arizona.json", R_OK) != -1 )
+			config_file_path = "/etc/arizona.json";
+
+		else
+		{
+			printf("[Err]  Error accessing configuration file. Halting.\n");
+			exit(0);
+		}
+
 	}
 
 	printf("Starting with \"%s\"...\n", config_file_path);

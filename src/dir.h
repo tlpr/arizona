@@ -14,7 +14,7 @@ size_t read_directory (char *dir_path, char ***directory_listing)
 
 	DIR *directory = NULL;
 	struct dirent *ep = NULL;
-	char *dmesg = "";
+	char dmesg[100];
 	
 	size_t count  = 0;
 
@@ -52,6 +52,9 @@ size_t read_directory (char *dir_path, char ***directory_listing)
 	}
 
 	closedir(directory);
+	sprintf(dmesg, "Found %zu files in \"%s\"", count, dir_path);
+	i_output(dmesg, "ok");
+
 	return count;
 
 }

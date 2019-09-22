@@ -99,14 +99,15 @@ void run_stream ()
 	int repeat = atoi(repeat_str);
 	free(repeat_str);
 
-	char **songs;
-	size_t song_count;
-
 	// Read the contents of specified in the configuration directory.
-	song_count = read_directory(audio_dir, &songs);
-	sprintf(dmesg, "Found %zu files in \"%s\"", song_count, audio_dir);
-	i_output(dmesg, "ok");
+	char **songs;
+	size_t song_count = read_directory(audio_dir, &songs);
 
+	if ( !song_count ) {
+		sprintf(dmesg, "Specified directory is empty. Halting...");
+		i_output(dmesg, "error");
+		exit(0);
+	}
 
 	char *tmp;
 
@@ -160,6 +161,8 @@ void run_stream ()
 	sprintf(dmesg, "Using play mode \"%s\"", play_mode);
 	i_output(dmesg, "ok");
 
+	int access_error_count = 0;
+	int last_rescan = 0;
 
 	// Loop through files in the directory.
 	for ( int i = 0; i <= song_count; i++ )
@@ -179,6 +182,7 @@ void run_stream ()
 					songs[j] = songs[i];
 					songs[i] = tmp;	
 				}
+				access_error_count = 0;
 				i = -1; continue;
 
 			}
@@ -190,17 +194,40 @@ void run_stream ()
 			}
 		}
 
-		char *full_path = malloc( 6 + strlen(audio_dir) + strlen(songs[i]) + 1 );
+		char *full_path = malloc( strlen(audio_dir) + strlen(songs[i]) + 1 );
 		strcpy(full_path, audio_dir);
 		strcat(full_path, songs[i]);
 
 		if ( access( full_path, R_OK ) == -1 )
 		{
-			sprintf(dmesg, "File \"%s\" is unreadable.  Skipping...", full_path);
+			access_error_count++;
+			sprintf(dmesg, "File \"%s\" is unreadable. Skipping...", full_path);
 			i_output(dmesg, "error");
 			free(full_path);
+
+			if ( access_error_count > ( song_count / 10 ) )
+			{
+
+				int time_now = (int) time(NULL);
+				if ( last_rescan > (time_now - 60) )
+				{
+					i_output("File access errors do not stop after rescan, halting.", "error");
+					exit(0);
+				}
+
+				i_output("More than 10\% of files in directory cannot be accessed. Rescanning directory...", "error");
+				song_count = read_directory(audio_dir, &songs);
+				access_error_count = 0;
+				last_rescan = time_now;
+
+			}	
+
 			if ( songs[ i + 1 ] == NULL )
+			{
+				access_error_count = 0;
 				i = -1;
+			}
+
 			continue;
 		}
 

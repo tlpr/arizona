@@ -1,3 +1,3 @@
 
-const char* VERSION = "alpha-0.3";
+const char* VERSION = "alpha-0.4";
 
