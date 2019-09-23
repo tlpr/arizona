@@ -167,7 +167,7 @@ void run_stream ()
 
 	int access_error_count = 0;
 	int last_rescan = 0;
-	char * requested_song = NULL;
+	char * requested_song = "";
 
 	// Loop through files in the directory.
 	for ( int i = 0; i <= song_count; i++ )
