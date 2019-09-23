@@ -32,15 +32,15 @@ void i_output ( char *message, const char *status )
 	if ( color )
 	{
 
-		char tmp_warn[20];
+		char tmp_warn[30];
 		sprintf( tmp_warn, "%s%s[ Warn ]%s ", colors[4], colors[1], colors[0] );
 		prefixes[0] = tmp_warn;
 		
-		char tmp_err[20];
+		char tmp_err[30];
 		sprintf( tmp_err, "%s%s[ Err ]%s  ", colors[2], colors[1], colors[0] );
 		prefixes[1] = tmp_err;
 
-		char tmp_ok[20];
+		char tmp_ok[30];
 		sprintf( tmp_ok, "%s%s[ OK ]%s   ", colors[3], colors[1], colors[0] );
 		prefixes[2] = tmp_ok;
 

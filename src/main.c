@@ -67,14 +67,7 @@ int main ( int argc, char* argv[] )
 	{
 
 		i_output("use-mysql in configuration is enabled, using MySQL queues...", "warning");
-	
 		queue_init();
-
-		char *next_song;
-		next_song = get_next_song();
-
-		sprintf (mesg, "Next song in database queue appears to be: \"%s\"", next_song);
-		i_output(mesg, "ok");
 
 	}
 

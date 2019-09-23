@@ -59,7 +59,11 @@ char* get_next_song ()
 		exit(0);
 	}
 
-	char *sql_query = "SELECT * FROM `queue` ORDER BY `id` DESC LIMIT 1";
+	char *sql_query = "SELECT * FROM `queue` ORDER BY `id` ASC LIMIT 1";
+
+	sprintf( dmesg, "Executing SQL query: %s", sql_query );
+	i_output( dmesg, "warning" );
+
 	mysql_query (connection, sql_query);
 	MYSQL_RES *result = mysql_store_result (connection);
 	if ( result == NULL )
@@ -83,6 +87,23 @@ char* get_next_song ()
 			sprintf (&next_song[i_array][0], "%s", row[i]);
 			i_array++;
 		}
+
+	}
+
+
+	char * song_id = &next_song[0][0];
+
+	if ( strcmp(&next_song[1][0], "") != 0 )
+	{
+
+		char sql_delete_query[ sizeof( song_id ) + 30 ] = { };
+		sprintf( sql_delete_query, "DELETE FROM `queue` WHERE `id` = %s", song_id );
+
+		sprintf( dmesg, "Executing SQL query: %s", sql_delete_query );
+		i_output( dmesg, "warning" );
+
+		mysql_query (connection, sql_delete_query);
+		mysql_store_result (connection);
 
 	}
 

@@ -8,7 +8,7 @@
  */
 
 shout_t *shout;
-
+char *icecast_frmt;
 
 void stream_init ()
 {
@@ -22,7 +22,7 @@ void stream_init ()
 	char* icecast_pstr = get_value_from_json (config, "shout-port");
 	char* icecast_user = get_value_from_json (config, "shout-user");
 	char* icecast_pass = get_value_from_json (config, "shout-pass");
-	char* icecast_frmt = get_value_from_json (config, "shout-frmt");
+	      icecast_frmt = get_value_from_json (config, "shout-frmt");
 	char* icecast_mnt  = get_value_from_json (config, "shout-mnt" );
 
 	// Initialize debug string variable.
@@ -94,10 +94,14 @@ void run_stream ()
 	char *play_mode = get_value_from_json(config, "song-play-mode");
 	char *audio_dir = get_value_from_json(config, "audio-directory");
 	char *repeat_str = get_value_from_json(config, "repeat");
+	char *str_mysql = get_value_from_json(config, "use-mysql");
 
-	// Convert char* repeat_str to integer repeat and free up the space taken by repeat_str.
+	// Convert char*'s to integers and free up the space.
 	int repeat = atoi(repeat_str);
 	free(repeat_str);
+
+	int use_mysql = atoi(str_mysql);
+	free(str_mysql);
 
 	// Read the contents of specified in the configuration directory.
 	char **songs;
@@ -163,6 +167,7 @@ void run_stream ()
 
 	int access_error_count = 0;
 	int last_rescan = 0;
+	char * requested_song = NULL;
 
 	// Loop through files in the directory.
 	for ( int i = 0; i <= song_count; i++ )
@@ -193,10 +198,39 @@ void run_stream ()
 				break;
 			}
 		}
+		
+		char *full_path;
 
-		char *full_path = malloc( strlen(audio_dir) + strlen(songs[i]) + 1 );
-		strcpy(full_path, audio_dir);
-		strcat(full_path, songs[i]);
+		if ( use_mysql )
+		{
+			i_output("Checking next song...", "warning");
+			requested_song = get_next_song();
+		}
+
+
+		if ( strcmp(requested_song, "") != 0 )
+		{
+		
+			i_output("Found new request in MySQL queue.", "warning");
+
+			full_path = malloc( strlen(audio_dir) + strlen(requested_song) + 4 );
+			strcpy(full_path, audio_dir);
+			strcat(full_path, requested_song);
+			strcat(full_path, (strcmp(icecast_frmt, "MP3") == 0) ? ".mp3" : ".ogg" );
+			
+			strcpy(requested_song, "");
+			i--;
+
+		}
+		
+		else
+		{
+			i_output("No new requests in MySQL.", "warning");
+			full_path = malloc( strlen(audio_dir) + strlen(songs[i]) + 1 );
+			strcpy(full_path, audio_dir);
+			strcat(full_path, songs[i]);
+		}
+
 
 		if ( access( full_path, R_OK ) == -1 )
 		{
@@ -205,7 +239,7 @@ void run_stream ()
 			i_output(dmesg, "error");
 			free(full_path);
 
-			if ( access_error_count > ( song_count / 10 ) )
+			if ( ((access_error_count / song_count) * 100) > 10 )
 			{
 
 				int time_now = (int) time(NULL);
