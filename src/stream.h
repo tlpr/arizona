@@ -79,10 +79,10 @@ void stream_init ()
 
 	stream_metadata = shout_metadata_new();
 
-	shout_set_name( shout, stream_name );
-	shout_set_url( shout, stream_url );
-	shout_set_genre( shout, stream_genre );
-	shout_set_description( shout, stream_desc);
+	if ( strcmp(stream_name, "") != 0 )  shout_set_name( shout, stream_name );
+	if ( strcmp(stream_url, "") != 0 )   shout_set_url( shout, stream_url );
+	if ( strcmp(stream_genre, "") != 0 ) shout_set_genre( shout, stream_genre );
+	if ( strcmp(stream_desc, "") != 0 )  shout_set_description( shout, stream_desc);
 
 	//
 	// ^ shout_set_{meta} is deprecated according to the documentation, but
@@ -121,6 +121,7 @@ void run_stream ()
 	// Initialize required variables.
 	unsigned char buffer[4096];
 	size_t read, total;
+	int ret;
 
 	// Get the required information from the configuration file
 	char *play_mode = get_value_from_json(config, "song-play-mode");
@@ -138,7 +139,6 @@ void run_stream ()
 	// Read the contents of specified in the configuration directory.
 	char **songs;
 	size_t song_count = read_directory(audio_dir, &songs);
-	int ret;
 
 	if ( !song_count ) {
 		sprintf(dmesg, "Specified directory is empty. Halting...");
@@ -204,14 +204,20 @@ void run_stream ()
 
 	int last_rescan = 0;
 	char * requested_song = "";
+	char * extension;
+	int time_now;
 
 	// Loop through files in the directory.
 	for ( int i = 0; i <= song_count; i++ )
 	{
 
+		sprintf(dmesg, "Starting loop for ID %d ( %s )", i, songs[i]);
+		i_output(dmesg, "warning");
+
 		// End of array
 		if ( songs[i] == NULL )
 		{
+
 			if (repeat)
 			{
 
@@ -222,7 +228,7 @@ void run_stream ()
 					int j = rand() % song_count;
 					char* tmp = songs[j];
 					songs[j] = songs[i];
-					songs[i] = tmp;	
+					songs[i] = tmp;
 				}
 				access_error_count = 0;
 				i = -1; continue;
@@ -237,37 +243,40 @@ void run_stream ()
 		}
 
 		// Check if the file has MP3 or OGG extension.
-		char * extension = strrchr(songs[i], '.');
+		extension = strrchr(songs[i], '.');
 
 		sprintf(dmesg, "|%s|", extension);
 		i_output(dmesg, "warning");
 
-		if ((strcmp(extension, ".mp3") != 0) && (strcmp(extension, ".ogg") != 0))
+		if ( extension != NULL )
 		{
-
-			sprintf(dmesg, "File %s is not MP3 or OGG.", songs[i]);
-			i_output(dmesg, "warning");
-			int time_now = time(NULL);
-
-			// To prevent infinite loop-like situations, check if there was
-			// more than 5 errors in last 15 seconds.
-			if ( (last_extension_error + 15) > time_now )
+			if ((strcmp(extension, ".mp3") != 0) && (strcmp(extension, ".ogg") != 0))
 			{
-				if (extension_error_count > 5)
+
+				sprintf(dmesg, "File %s is not MP3 or OGG.", songs[i]);
+				i_output(dmesg, "warning");
+				time_now = time(NULL);
+
+				// To prevent infinite loop-like situations, check if there was
+				// more than 5 errors in last 15 seconds.
+				if ( (last_extension_error + 15) > time_now )
 				{
-					i_output("Too much files in specified directory has wrong extension. Halting.", "error");
-					break;
+					if (extension_error_count > 5)
+					{
+						i_output("Too much files in specified directory has wrong extension. Halting.", "error");
+						break;
+					}
+					extension_error_count++;
 				}
-				extension_error_count++;
+				
+				else
+					extension_error_count = 0;
+				
+
+				last_extension_error = time_now;
+				continue;
+
 			}
-			
-			else
-				extension_error_count = 0;
-			
-
-			last_extension_error = time_now;
-			continue;
-
 		}
 		
 		char *full_path;
@@ -317,7 +326,7 @@ void run_stream ()
 			if ( ((access_error_count / song_count) * 100) > 10 )
 			{
 
-				int time_now = (int) time(NULL);
+				time_now = (int) time(NULL);
 				if ( last_rescan > (time_now - 60) )
 				{
 					i_output("File access errors do not stop after rescan, halting.", "error");
@@ -352,7 +361,6 @@ void run_stream ()
 
 		shout_metadata_add( stream_metadata, "song", song_name );
 		shout_set_metadata( shout, stream_metadata );
-		free( song_name );
 		
 		while (1)
 		{

@@ -117,6 +117,18 @@ Use full path in case Arizona is installed into the system.
 **repeat (default 1)** is repeating the entire playlist if it reaches the end. Switch it to 0
 to turn off Arizona after it's done playing the music inside a folder. 
 
+**stream-name (default "My Radio")** is just a public informational metadata sent to Icecast visible
+on Icecast server website.
+
+**stream-url (default " ")** specifies an URL address of the audio stream.
+
+**stream-genre (default "various")** tells the listeners what kind of music genre is playing.
+
+**stream-desc (default "Powered by Arizona (https://github.com/tlpr/arizona)")** is an description
+of the audio stream.
+
+**stream-irc (default " ")** specifies an IRC channel related to the audio stream.
+
 
 #### Licenses and credits
 
