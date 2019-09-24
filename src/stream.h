@@ -8,6 +8,7 @@
  */
 
 shout_t *shout;
+shout_metadata_t *stream_metadata;
 char *icecast_frmt;
 
 void stream_init ()
@@ -24,6 +25,12 @@ void stream_init ()
 	char* icecast_pass = get_value_from_json (config, "shout-pass");
 	      icecast_frmt = get_value_from_json (config, "shout-frmt");
 	char* icecast_mnt  = get_value_from_json (config, "shout-mnt" );
+
+	char* stream_name = get_value_from_json (config, "stream-name");
+	char* stream_genre = get_value_from_json (config, "stream-genre");
+	char* stream_url = get_value_from_json (config, "stream-url");
+	char* stream_desc = get_value_from_json (config, "stream-desc");
+	char* stream_irc = get_value_from_json (config, "stream-irc");
 
 	// Initialize debug string variable.
 	char dmesg[100];
@@ -68,6 +75,32 @@ void stream_init ()
 		exit(0);
 	}
 
+	// Set optional metadata
+
+	stream_metadata = shout_metadata_new();
+
+	shout_set_name( shout, stream_name );
+	shout_set_url( shout, stream_url );
+	shout_set_genre( shout, stream_genre );
+	shout_set_description( shout, stream_desc);
+
+	//
+	// ^ shout_set_{meta} is deprecated according to the documentation, but
+	// I couldn't get below code to send anything for some unknown reason as
+	// it simply doesn't return any error and just doesn't set it on Icecast.
+	// (it works for setting "song" though.)
+	//
+
+	//shout_metadata_add( stream_metadata, SHOUT_META_NAME, stream_name );
+	//shout_metadata_add( stream_metadata, SHOUT_META_URL, stream_url );
+	//shout_metadata_add( stream_metadata, SHOUT_META_GENRE, stream_genre );
+	//shout_metadata_add( stream_metadata, SHOUT_META_DESCRIPTION, stream_desc );
+
+	if ( strcmp(stream_irc, "") != 0 )
+		shout_metadata_add( stream_metadata, SHOUT_META_IRC, stream_irc );
+
+	shout_set_metadata( shout, stream_metadata );
+
 }
 
 
@@ -88,7 +121,6 @@ void run_stream ()
 	// Initialize required variables.
 	unsigned char buffer[4096];
 	size_t read, total;
-	int ret;
 
 	// Get the required information from the configuration file
 	char *play_mode = get_value_from_json(config, "song-play-mode");
@@ -106,6 +138,7 @@ void run_stream ()
 	// Read the contents of specified in the configuration directory.
 	char **songs;
 	size_t song_count = read_directory(audio_dir, &songs);
+	int ret;
 
 	if ( !song_count ) {
 		sprintf(dmesg, "Specified directory is empty. Halting...");
@@ -166,6 +199,9 @@ void run_stream ()
 	i_output(dmesg, "ok");
 
 	int access_error_count = 0;
+	int extension_error_count = 0;
+	int last_extension_error = 0;
+
 	int last_rescan = 0;
 	char * requested_song = "";
 
@@ -173,6 +209,7 @@ void run_stream ()
 	for ( int i = 0; i <= song_count; i++ )
 	{
 
+		// End of array
 		if ( songs[i] == NULL )
 		{
 			if (repeat)
@@ -198,8 +235,43 @@ void run_stream ()
 				break;
 			}
 		}
+
+		// Check if the file has MP3 or OGG extension.
+		char * extension = strrchr(songs[i], '.');
+
+		sprintf(dmesg, "|%s|", extension);
+		i_output(dmesg, "warning");
+
+		if ((strcmp(extension, ".mp3") != 0) && (strcmp(extension, ".ogg") != 0))
+		{
+
+			sprintf(dmesg, "File %s is not MP3 or OGG.", songs[i]);
+			i_output(dmesg, "warning");
+			int time_now = time(NULL);
+
+			// To prevent infinite loop-like situations, check if there was
+			// more than 5 errors in last 15 seconds.
+			if ( (last_extension_error + 15) > time_now )
+			{
+				if (extension_error_count > 5)
+				{
+					i_output("Too much files in specified directory has wrong extension. Halting.", "error");
+					break;
+				}
+				extension_error_count++;
+			}
+			
+			else
+				extension_error_count = 0;
+			
+
+			last_extension_error = time_now;
+			continue;
+
+		}
 		
 		char *full_path;
+		char *song_name;
 
 		if ( use_mysql )
 		{
@@ -217,7 +289,9 @@ void run_stream ()
 			strcpy(full_path, audio_dir);
 			strcat(full_path, requested_song);
 			strcat(full_path, (strcmp(icecast_frmt, "MP3") == 0) ? ".mp3" : ".ogg" );
-			
+			song_name = requested_song;			
+
+
 			strcpy(requested_song, "");
 			i--;
 
@@ -229,6 +303,7 @@ void run_stream ()
 			full_path = malloc( strlen(audio_dir) + strlen(songs[i]) + 1 );
 			strcpy(full_path, audio_dir);
 			strcat(full_path, songs[i]);
+			song_name = songs[i];
 		}
 
 
@@ -246,7 +321,7 @@ void run_stream ()
 				if ( last_rescan > (time_now - 60) )
 				{
 					i_output("File access errors do not stop after rescan, halting.", "error");
-					exit(0);
+					break;
 				}
 
 				i_output("More than 10\% of files in directory cannot be accessed. Rescanning directory...", "error");
@@ -274,6 +349,10 @@ void run_stream ()
 		// Read the file.
 		FILE *audio = fopen( full_path, "r" );
 		free(full_path);
+
+		shout_metadata_add( stream_metadata, "song", song_name );
+		shout_set_metadata( shout, stream_metadata );
+		free( song_name );
 		
 		while (1)
 		{

@@ -16,15 +16,22 @@
 	"shout-port": 8002,
 
 	"shout-frmt": "MP3",
-	"shout-mnt":  "/main.mp3",
-	"shout-user": "mainn",
-	"shout-pass": "testing1234",
+	"shout-mnt":  "/stream.mp3",
+	"shout-user": "source",
+	"shout-pass": "",
 
 	"3": "Playback setup",
-	"song-play-mode": "alphabetical",
-	"use-mysql": 1,
+	"song-play-mode": "random",
+	"use-mysql": 0,
 	"audio-directory": "music/",
-	"repeat": 1
+	"repeat": 1,
+
+	"4": "Metadata",
+	"stream-name": "My Radio",
+	"stream-url": "",
+	"stream-genre": "various",
+	"stream-desc": "Powered by Arizona (https://github.com/tlpr/arizona)",
+	"stream-irc": ""
 
 }
 
