@@ -124,7 +124,7 @@ void run_stream ()
 	int ret;
 
 	// Get the required information from the configuration file
-	char *play_mode = get_value_from_json(config, "song-play-mode");
+	char *is_random = get_value_from_json(config, "random");
 	char *audio_dir = get_value_from_json(config, "audio-directory");
 	char *repeat_str = get_value_from_json(config, "repeat");
 	char *str_mysql = get_value_from_json(config, "use-mysql");
@@ -135,10 +135,14 @@ void run_stream ()
 
 	int use_mysql = atoi(str_mysql);
 	free(str_mysql);
+	
+	int random = atoi(is_random);
+	free(is_random);
 
 	// Read the contents of specified in the configuration directory.
 	char **songs;
 	size_t song_count = read_directory(audio_dir, &songs);
+
 
 	if ( !song_count ) {
 		sprintf(dmesg, "Specified directory is empty. Halting...");
@@ -146,61 +150,10 @@ void run_stream ()
 		exit(0);
 	}
 
-	//char *tmp;
+	if (random) sort_array(songs, song_count);
 
-	sort_array(play_mode, songs, song_count);
+	i_output("Initializing variables and allocating space in memory for full_path", "warning");
 
-	/*if ( strcmp(play_mode, "alphabetical") == 0 )
-	{
-
-		for (int i = 0; songs[i]; i++)
-		{
-			for (int j = 0; songs[j]; j++)
-			{
-				if ( strcmp(songs[i], songs[j]) < 0 )
-				{
-				
-					tmp = songs[i];
-					songs[i] = songs[j];
-					songs[j] = tmp;
-
-				}
-			}
-		}
-
-	}
-
-	else if ( strcmp(play_mode, "random") == 0 )
-	{
-	
-		for ( int i = 0; i < song_count; i++ )
-		{
-		
-			srand (time(NULL));
-			int j = rand() % song_count;
-			tmp = songs[j];
-			songs[j] = songs[i];
-			songs[i] = tmp;
-		
-		}
-		
-	}
-
-	else if ( strcmp(play_mode, "none") == 0 ) { } // do nothing if "none"
-
-	else
-	{
-	
-		sprintf(dmesg, "Unknown play mode \"%s\"", play_mode);
-		i_output(dmesg, "error");
-		exit(0);
-
-	}
-
-	sprintf(dmesg, "Using play mode \"%s\"", play_mode);
-	i_output(dmesg, "ok");*/
-
-	int access_error_count = 0;
 	int extension_error_count = 0;
 	int last_extension_error = 0;
 
@@ -208,6 +161,10 @@ void run_stream ()
 	char * requested_song = "";
 	char * extension;
 	int time_now;
+	char * full_path;
+	char * song_name;
+
+	full_path = malloc( strlen(audio_dir) + 181 );
 
 	i_output("Starting mainloop", "warning");
 
@@ -215,7 +172,7 @@ void run_stream ()
 	for ( int i = 0; i <= song_count; i++ )
 	{
 
-		sprintf(dmesg, "Starting loop for ID %d ( %s )", i, songs[i]);
+		sprintf(dmesg, "Using ID %d", i);
 		i_output(dmesg, "warning");
 
 		// End of array
@@ -226,16 +183,8 @@ void run_stream ()
 			{
 
 				i_output("Encountered end of playlist. Repeating...", "ok");
-				// If play mode is random reshuffle the array.
-				sort_array(play_mode, songs, song_count);
-				//if ( strcmp(play_mode, "random") )
-				//{
-				//	int j = rand() % song_count;
-				//	char* tmp = songs[j];
-				//	songs[j] = songs[i];
-				//	songs[i] = tmp;
-				//}
-				access_error_count = 0;
+
+				if (random) sort_array(songs, song_count);
 				i = -1; continue;
 
 			}
@@ -250,80 +199,75 @@ void run_stream ()
 		// Check if the file has MP3 or OGG extension.
 		extension = strrchr(songs[i], '.');
 
-		if ( extension != NULL )
+
+		if ((strcmp(extension, ".mp3") != 0) && (strcmp(extension, ".ogg") != 0))
 		{
-			if ((strcmp(extension, ".mp3") != 0) && (strcmp(extension, ".ogg") != 0))
+
+			sprintf(dmesg, "File %s is not MP3 or OGG.", songs[i]);
+			i_output(dmesg, "warning");
+			time_now = time(NULL);
+
+			// To prevent infinite loop-like situations, check if there was
+			// more than 5 errors in last 15 seconds.
+			if ( (last_extension_error + 15) > time_now )
 			{
-
-				sprintf(dmesg, "File %s is not MP3 or OGG.", songs[i]);
-				i_output(dmesg, "warning");
-				time_now = time(NULL);
-
-				// To prevent infinite loop-like situations, check if there was
-				// more than 5 errors in last 15 seconds.
-				if ( (last_extension_error + 15) > time_now )
+				if (extension_error_count > 5)
 				{
-					if (extension_error_count > 5)
-					{
-						i_output("Too much files in specified directory has wrong extension. Halting.", "error");
-						break;
-					}
-					extension_error_count++;
+					i_output("Too much files in specified directory has wrong extension. Halting.", "error");
+					break;
 				}
-				
-				else
-					extension_error_count = 0;
-				
-
-				last_extension_error = time_now;
-				continue;
-
+				extension_error_count++;
 			}
+			
+			else
+				extension_error_count = 0;
+				
+
+			last_extension_error = time_now;
+			continue;
+
 		}
-		
-		char *full_path;
-		char *song_name;
 
 		if ( use_mysql )
 		{
 			i_output("Checking next song...", "warning");
 			requested_song = get_next_song();
+
+			if ( strcmp(requested_song, "") != 0 )
+			{
+			
+				i_output("Found new request in MySQL queue.", "warning");
+
+				strcpy(full_path, audio_dir);
+				strcat(full_path, requested_song);
+				strcat(full_path, (strcmp(icecast_frmt, "MP3") == 0) ? ".mp3" : ".ogg" );
+				song_name = requested_song;			
+
+
+				strcpy(requested_song, "");
+				i--;
+
+			}
+
+			else
+				i_output("No new requests in MySQL.", "warning");
+
 		}
 
-
-		if ( strcmp(requested_song, "") != 0 )
-		{
-		
-			i_output("Found new request in MySQL queue.", "warning");
-
-			full_path = malloc( strlen(audio_dir) + strlen(requested_song) + 4 );
-			strcpy(full_path, audio_dir);
-			strcat(full_path, requested_song);
-			strcat(full_path, (strcmp(icecast_frmt, "MP3") == 0) ? ".mp3" : ".ogg" );
-			song_name = requested_song;			
-
-
-			strcpy(requested_song, "");
-			i--;
-
-		}
-		
 		else
 		{
-			i_output("No new requests in MySQL.", "warning");
-			full_path = malloc( strlen(audio_dir) + strlen(songs[i]) + 1 );
+
 			strcpy(full_path, audio_dir);
 			strcat(full_path, songs[i]);
 			song_name = songs[i];
+
 		}
 
 
 		if ( access( full_path, R_OK ) == -1 )
 		{
-			access_error_count++;
 			sprintf(dmesg, "File \"%s\" is unreadable.", full_path);
 			i_output(dmesg, "error");
-			free(full_path);
 
 			time_now = time(NULL);
 			if ( last_rescan > (time_now - 60) )
@@ -334,26 +278,26 @@ void run_stream ()
 
 			i_output("Rescanning directory due to access error...", "error");
 			song_count = read_directory(audio_dir, &songs);
-			access_error_count = 0;
+			if (random) sort_array(songs, song_count);
 			last_rescan = time_now;
 
-			access_error_count = 0;
 			i = -1; continue;
 		}
 
-		else
-		{
-			sprintf(dmesg, "Streaming \"%s\"...", full_path);
-			i_output(dmesg, "ok");
-		}
+
+		sprintf(dmesg, "Streaming \"%s\"...", full_path);
+		i_output(dmesg, "ok");
 
 		// Read the file.
 		FILE *audio = fopen( full_path, "r" );
-		free(full_path);
+
+		i_output("File opened.", "warning");
 
 		shout_metadata_add( stream_metadata, "song", song_name );
 		shout_set_metadata( shout, stream_metadata );
 		
+		i_output("Set metadata.", "warning");
+
 		while (1)
 		{
 		
@@ -365,7 +309,10 @@ void run_stream ()
 				
 				ret = shout_send (shout, buffer, read);
 				if (ret != SHOUTERR_SUCCESS)
+				{
 					i_output("An error occured while sending buffer.", "error");
+					break;
+				}
 
 			}
 
@@ -377,12 +324,6 @@ void run_stream ()
 		}
 
 		fclose (audio);
-
-		if ( i == song_count )
-		{
-			i_output("Reached the end of playlist. Repeating...", "ok");
-			i = 0;
-		}
 	
 	}
 

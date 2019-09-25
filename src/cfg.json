@@ -21,7 +21,7 @@
 	"shout-pass": "",
 
 	"3": "Playback setup",
-	"song-play-mode": "random",
+	"random": 1,
 	"use-mysql": 0,
 	"audio-directory": "music/",
 	"repeat": 1,

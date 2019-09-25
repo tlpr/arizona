@@ -111,61 +111,31 @@ char* get_next_song ()
 
 }
 
-void sort_array ( char* sort_method, char** directory_listing, int file_count )
+
+void sort_array ( char** directory_listing, int file_count )
 {
 
-	char * tmp;
-	char dmesg[150];
+	i_output("Shuffling the playlist...", "warning");
 
-	if ( strcmp(sort_method, "alphabetical") == 0 )
+	if ( file_count > 1 )
 	{
-
-		i_output("Attempting to sort alphabetically...", "warning");
-
-		for (int i = 0; directory_listing[i]; i++)
-		{
-			for (int j = 0; directory_listing[j]; j++)
-			{
-				if ( strcmp(directory_listing[i], directory_listing[j]) < 0 )
-				{
-				
-					tmp = directory_listing[i];
-					directory_listing[i] = directory_listing[j];
-					directory_listing[j] = tmp;
-
-				}
-			}
-		}
-
-	}
-
-	else if ( strcmp(sort_method, "random") == 0 )
-	{
-	
-		i_output("Shuffling the playlist...", "warning");
-
-		for ( int i = 0; i < file_count; i++ )
-		{
 		
-			srand (time(NULL));
-			int j = rand() % file_count;
-			tmp = directory_listing[j];
+		size_t i;
+		for ( i = 0; i < (file_count - 1); i++ )
+		{
+			size_t j = i + rand() / (RAND_MAX / (file_count - i) + 1);
+			char * t = directory_listing[j];
 			directory_listing[j] = directory_listing[i];
-			directory_listing[i] = tmp;
-		
+			directory_listing[i] = t;
+				
 		}
 		
 	}
-
-	else if ( strcmp(sort_method, "none") == 0 ) { } // do nothing if "none"
-
+		
 	else
-	{
-	
-		sprintf(dmesg, "Unknown play mode \"%s\"", sort_method);
-		i_output(dmesg, "error");
-		exit(0);
+		i_output("Directory is less than 2 files. Shuffling not required.", "warning");
 
-	}
+	
+	i_output("Sorted!", "warning");
 
 }

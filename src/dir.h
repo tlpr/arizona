@@ -16,7 +16,7 @@ size_t read_directory (char *dir_path, char ***directory_listing)
 	struct dirent *ep = NULL;
 	char dmesg[100];
 	
-	size_t count  = 0;
+	size_t count = 0;
 
 	directory = opendir(dir_path);
 	if ( directory == NULL )

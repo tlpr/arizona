@@ -58,6 +58,8 @@ int main ( int argc, char* argv[] )
 			printf("%s\n\n", "Display version information.");
 
 			printf("%s\n", "Documentation is available at https://github.com/tlpr/arizona");
+			
+			exit(0);
 
 		}
 
