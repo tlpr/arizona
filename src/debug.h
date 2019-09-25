@@ -54,7 +54,9 @@ void i_output ( char *message, const char *status )
 
 	}
 
-	int is_warning = (strcmp(status, "debug") || strcmp(status, "warning"));
+	int is_warning = strcmp(status, "debug");
+	if (is_warning != 0) is_warning = strcmp(status, "warning");
+
 	int is_error = strcmp(status, "error");
 
 	// Create message.
@@ -76,3 +78,29 @@ void i_output ( char *message, const char *status )
 
 }
 
+void display_splash ( int use_color )
+{
+
+	if ( !use_color )
+
+		printf(
+			"\n%s\n%s%s\n%s\n%s\n%s\n\n",
+			"              #                           ",
+			"  ###  # ##        ####   ##   # #    ### ", VERSION,
+			" #  #  ##     #      #   #  #  ## #  #  # ",
+			" # ##  #      #     #    #  #  #  #  # ## ",
+			"  # #  #      #    ####   ##   #  #   # # "
+		);
+
+	else
+
+		printf(
+			"\n%s\n%s%s\n%s\n%s\n%s\n\n",
+			"           \033[32m   #                           ",
+			"\033[31m  ###\033[33m  # ##    \033[36m    ####\033[34m   ## \033[35m  # # \033[31m   ### \033[0m", VERSION,
+			"\033[31m #  #\033[33m  ##  \033[32m   #\033[36m      # \033[34m  #  #\033[35m  ## #\033[31m  #  # ",
+			"\033[31m # ##\033[33m  #   \033[32m   #\033[36m     #  \033[34m  #  #\033[35m  #  #\033[31m  # ## ",
+			"\033[31m  # #\033[33m  #   \033[32m   #\033[36m    ####\033[34m   ## \033[35m  #  #\033[31m   # # \033[0m"
+		);
+
+}

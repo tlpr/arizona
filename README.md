@@ -1,5 +1,4 @@
-# Arizona
-## Audio streaming client for Icecast internet radio's
+![arizona](arizona.png)
 
 Arizona is a free software streaming client for Icecast servers
 written in C programming language using the libshout library.

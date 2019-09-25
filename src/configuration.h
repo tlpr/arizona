@@ -32,8 +32,6 @@ struct json_object *read_configuration (char *config_file_path)
 
 	}
 
-	printf("Starting with \"%s\"...\n", config_file_path);
-
 	// Read the file and parse JSON.
 	FILE *config_file_obj = fopen(config_file_path, "r");
 	if ( !config_file_obj )

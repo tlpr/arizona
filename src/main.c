@@ -16,8 +16,8 @@
 #include "configuration.h"
 struct json_object *config;
 
-#include "debug.h"
 #include "version.h"
+#include "debug.h"
 #include "dir.h"
 #include "queue.h"
 #include "stream.h"
@@ -45,6 +45,22 @@ int main ( int argc, char* argv[] )
 				config_path = argv[2];
 		}
 
+		else if ( (strcmp( argv[1], "--help" ) == 0) || (strcmp( argv[1], "-h" ) == 0) )
+		{
+
+			printf("%s\n", "-c, --use-config {PATH}");
+			printf("%s\n\n", "Use JSON configuration file located at {PATH}.");
+
+			printf("%s\n", "-h, --help");
+			printf("%s\n\n", "Display this message.");
+
+			printf("%s\n", "-v, --version");
+			printf("%s\n\n", "Display version information.");
+
+			printf("%s\n", "Documentation is available at https://github.com/tlpr/arizona");
+
+		}
+
 		else if ( (strcmp( argv[1], "--version" ) == 0) || (strcmp( argv[1], "-v" ) == 0) )
 		{
 		
@@ -57,8 +73,11 @@ int main ( int argc, char* argv[] )
 	}
 
 	config = read_configuration(config_path);
-	sprintf(mesg, "Running Arizona %s", VERSION);
-	i_output(mesg, "ok");	
+	
+	char* use_color_char = get_value_from_json(config, "color");
+	int use_color = atoi(use_color_char);
+
+	display_splash(use_color);
 
 	// Use queue in MySQL database.
 	char* use_mysql_char = get_value_from_json(config, "use-mysql");
