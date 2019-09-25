@@ -146,9 +146,11 @@ void run_stream ()
 		exit(0);
 	}
 
-	char *tmp;
+	//char *tmp;
 
-	if ( strcmp(play_mode, "alphabetical") == 0 )
+	sort_array(play_mode, songs, song_count);
+
+	/*if ( strcmp(play_mode, "alphabetical") == 0 )
 	{
 
 		for (int i = 0; songs[i]; i++)
@@ -196,7 +198,7 @@ void run_stream ()
 	}
 
 	sprintf(dmesg, "Using play mode \"%s\"", play_mode);
-	i_output(dmesg, "ok");
+	i_output(dmesg, "ok");*/
 
 	int access_error_count = 0;
 	int extension_error_count = 0;
@@ -206,6 +208,8 @@ void run_stream ()
 	char * requested_song = "";
 	char * extension;
 	int time_now;
+
+	i_output("Starting mainloop", "warning");
 
 	// Loop through files in the directory.
 	for ( int i = 0; i <= song_count; i++ )
@@ -223,13 +227,14 @@ void run_stream ()
 
 				i_output("Encountered end of playlist. Repeating...", "ok");
 				// If play mode is random reshuffle the array.
-				if ( strcmp(play_mode, "random") )
-				{
-					int j = rand() % song_count;
-					char* tmp = songs[j];
-					songs[j] = songs[i];
-					songs[i] = tmp;
-				}
+				sort_array(play_mode, songs, song_count);
+				//if ( strcmp(play_mode, "random") )
+				//{
+				//	int j = rand() % song_count;
+				//	char* tmp = songs[j];
+				//	songs[j] = songs[i];
+				//	songs[i] = tmp;
+				//}
 				access_error_count = 0;
 				i = -1; continue;
 
@@ -244,9 +249,6 @@ void run_stream ()
 
 		// Check if the file has MP3 or OGG extension.
 		extension = strrchr(songs[i], '.');
-
-		sprintf(dmesg, "|%s|", extension);
-		i_output(dmesg, "warning");
 
 		if ( extension != NULL )
 		{
@@ -319,34 +321,24 @@ void run_stream ()
 		if ( access( full_path, R_OK ) == -1 )
 		{
 			access_error_count++;
-			sprintf(dmesg, "File \"%s\" is unreadable. Skipping...", full_path);
+			sprintf(dmesg, "File \"%s\" is unreadable.", full_path);
 			i_output(dmesg, "error");
 			free(full_path);
 
-			if ( ((access_error_count / song_count) * 100) > 10 )
+			time_now = time(NULL);
+			if ( last_rescan > (time_now - 60) )
 			{
-
-				time_now = (int) time(NULL);
-				if ( last_rescan > (time_now - 60) )
-				{
-					i_output("File access errors do not stop after rescan, halting.", "error");
-					break;
-				}
-
-				i_output("More than 10\% of files in directory cannot be accessed. Rescanning directory...", "error");
-				song_count = read_directory(audio_dir, &songs);
-				access_error_count = 0;
-				last_rescan = time_now;
-
-			}	
-
-			if ( songs[ i + 1 ] == NULL )
-			{
-				access_error_count = 0;
-				i = -1;
+				i_output("File access errors do not stop after rescan, halting.", "error");
+				break;
 			}
 
-			continue;
+			i_output("Rescanning directory due to access error...", "error");
+			song_count = read_directory(audio_dir, &songs);
+			access_error_count = 0;
+			last_rescan = time_now;
+
+			access_error_count = 0;
+			i = -1; continue;
 		}
 
 		else

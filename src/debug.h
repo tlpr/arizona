@@ -33,11 +33,11 @@ void i_output ( char *message, const char *status )
 	{
 
 		char tmp_warn[30];
-		sprintf( tmp_warn, "%s%s[ Warn ]%s ", colors[4], colors[1], colors[0] );
+		sprintf( tmp_warn, "%s%s[ DBG ]%s  ", colors[4], colors[1], colors[0] );
 		prefixes[0] = tmp_warn;
 		
 		char tmp_err[30];
-		sprintf( tmp_err, "%s%s[ Err ]%s  ", colors[2], colors[1], colors[0] );
+		sprintf( tmp_err, "%s%s[ ERR ]%s  ", colors[2], colors[1], colors[0] );
 		prefixes[1] = tmp_err;
 
 		char tmp_ok[30];
@@ -48,13 +48,13 @@ void i_output ( char *message, const char *status )
 
 	else
 	{
-		prefixes[0] = "[ Warn ] ";
-		prefixes[1] = "[ Err ]  ";
+		prefixes[0] = "[ DBG ]  ";
+		prefixes[1] = "[ ERR ]  ";
 		prefixes[2] = "[ OK ]   ";
 
 	}
 
-	int is_warning = strcmp(status, "warning");
+	int is_warning = (strcmp(status, "debug") || strcmp(status, "warning"));
 	int is_error = strcmp(status, "error");
 
 	// Create message.
