@@ -156,27 +156,28 @@ void run_stream ()
 
 	int extension_error_count = 0;
 	int last_extension_error = 0;
-
 	int last_rescan = 0;
+	int time_now;
+	
 	char * requested_song = "";
 	char * extension;
-	int time_now;
 	char * full_path;
 	char * song_name;
 
 	full_path = malloc( strlen(audio_dir) + 181 );
 
 	i_output("Starting mainloop", "warning");
-
+	int i = 0;
+	
 	// Loop through files in the directory.
-	for ( int i = 0; i <= song_count; i++ )
+	while (1)
 	{
 
 		sprintf(dmesg, "Using ID %d", i);
 		i_output(dmesg, "warning");
 
 		// End of array
-		if ( songs[i] == NULL )
+		if ( (i + 1) > song_count )
 		{
 
 			if (repeat)
@@ -185,7 +186,7 @@ void run_stream ()
 				i_output("Encountered end of playlist. Repeating...", "ok");
 
 				if (random) sort_array(songs, song_count);
-				i = -1; continue;
+				i = 0; continue;
 
 			}
 
@@ -194,11 +195,16 @@ void run_stream ()
 				i_output("Encountered end of playlist and repeat is disabled.", "ok");
 				break;
 			}
+			
 		}
-
+		
+		else
+			i_output("Continuing...", "warning");
+		
 		// Check if the file has MP3 or OGG extension.
 		extension = strrchr(songs[i], '.');
 
+		i_output("Got extension.", "warning");
 
 		if ((strcmp(extension, ".mp3") != 0) && (strcmp(extension, ".ogg") != 0))
 		{
@@ -224,7 +230,7 @@ void run_stream ()
 				
 
 			last_extension_error = time_now;
-			continue;
+			i++; continue;
 
 		}
 
@@ -246,11 +252,18 @@ void run_stream ()
 
 				strcpy(requested_song, "");
 				i--;
+				sprintf(dmesg, "Decrementing ID to %d and streaming requested audio.", i);
+				i_output(dmesg, "warning");
 
 			}
 
 			else
+			{
 				i_output("No new requests in MySQL.", "warning");
+				strcpy(full_path, audio_dir);
+				strcat(full_path, songs[i]);
+				song_name = songs[i];
+			}
 
 		}
 
@@ -281,7 +294,7 @@ void run_stream ()
 			if (random) sort_array(songs, song_count);
 			last_rescan = time_now;
 
-			i = -1; continue;
+			i = 0; continue;
 		}
 
 
@@ -324,6 +337,7 @@ void run_stream ()
 		}
 
 		fclose (audio);
+		i++;
 	
 	}
 
