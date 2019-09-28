@@ -141,7 +141,7 @@ void run_stream ()
 
 	// Read the contents of specified in the configuration directory.
 	char **songs;
-	size_t song_count = read_directory(audio_dir, &songs);
+	size_t song_count = read_directory(audio_dir, &songs, 0);
 
 
 	if ( !song_count ) {
@@ -163,6 +163,7 @@ void run_stream ()
 	char * extension;
 	char * full_path;
 	char * song_name;
+	char * bumper = NULL;
 
 	full_path = malloc( strlen(audio_dir) + 181 );
 
@@ -175,7 +176,7 @@ void run_stream ()
 
 		sprintf(dmesg, "Using ID %d", i);
 		i_output(dmesg, "warning");
-
+		
 		// End of array
 		if ( (i + 1) > song_count )
 		{
@@ -197,9 +198,6 @@ void run_stream ()
 			}
 			
 		}
-		
-		else
-			i_output("Continuing...", "warning");
 		
 		// Check if the file has MP3 or OGG extension.
 		extension = strrchr(songs[i], '.');
@@ -233,8 +231,10 @@ void run_stream ()
 			i++; continue;
 
 		}
-
-		if ( use_mysql )
+		
+		bumper = get_bumper();
+		
+		if ( use_mysql && (bumper == NULL) )
 		{
 			i_output("Checking next song...", "warning");
 			requested_song = get_next_song();
@@ -266,6 +266,17 @@ void run_stream ()
 			}
 
 		}
+		
+		else if ( bumper != NULL )
+		{
+
+			i_output("Playing bumper...", "warning");
+			strcpy(full_path, bumper);
+			free(bumper);
+			song_name = "Bumper";
+			i--;
+			
+		}
 
 		else
 		{
@@ -290,7 +301,7 @@ void run_stream ()
 			}
 
 			i_output("Rescanning directory due to access error...", "error");
-			song_count = read_directory(audio_dir, &songs);
+			song_count = read_directory(audio_dir, &songs, 0);
 			if (random) sort_array(songs, song_count);
 			last_rescan = time_now;
 

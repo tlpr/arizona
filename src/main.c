@@ -19,6 +19,7 @@ struct json_object *config;
 #include "version.h"
 #include "debug.h"
 #include "dir.h"
+#include "bumpers.h"
 #include "queue.h"
 #include "stream.h"
 

@@ -9,7 +9,7 @@
 
 #include <dirent.h>
 
-size_t read_directory (char *dir_path, char ***directory_listing)
+size_t read_directory (char *dir_path, char ***directory_listing, int only_directories)
 {
 
 	DIR *directory = NULL;
@@ -30,7 +30,9 @@ size_t read_directory (char *dir_path, char ***directory_listing)
 	ep = readdir(directory);
 	while ( NULL != ep )
 	{
-		if ( ep->d_type == DT_REG )
+		if ( ep->d_type == DT_REG && !only_directories )
+			count++;
+		else if ( ep->d_type == DT_DIR && only_directories )
 			count++;
 
 		ep = readdir(directory);
@@ -43,9 +45,19 @@ size_t read_directory (char *dir_path, char ***directory_listing)
 	ep = readdir(directory);
 	while (NULL != ep)
 	{
-
-		if ( ep->d_type == DT_REG )
-			(*directory_listing)[count++] = strdup(ep->d_name);
+		if ( only_directories )
+		{
+			if ( ep->d_type == DT_DIR )
+			{
+				if ( (strcmp(ep->d_name, ".") != 0) && (strcmp(ep->d_name, "..") != 0) )
+					(*directory_listing)[count++] = strdup(ep->d_name);
+			}
+		}
+		else
+		{
+			if ( ep->d_type == DT_REG )
+				(*directory_listing)[count++] = strdup(ep->d_name);
+		}
 
 		ep = readdir(directory);
 

@@ -7,5 +7,5 @@
  *
  */
 
-const char* VERSION = "beta-0.11";
+const char* VERSION = "beta-0.12";
 
