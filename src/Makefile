@@ -7,15 +7,18 @@ CFLAGS = -g -Wall -L/usr/lib `pkg-config --cflags --libs json-c` `mysql_config -
 SRC := main.c
 BIN := ../bin/arizona.o
 
+DESTDIR?=/usr/local/bin
+CONFDIR?=/etc
+
 .PHONY: install
-install arizona:
-	mv "../bin/arizona.o" "/usr/bin/arizona"
-	mv "../bin/cfg.json" "/etc/arizona.json"
+install:
+	cp ../bin/arizona.o $(DESTDIR)/arizona
+	cp ../bin/cfg.json $(CONFDIR)/arizona.json
 
 .PHONY: uninstall
 uninstall:
-	rm -f "/usr/bin/arizona"
-	rm -f "/etc/arizona.json"
+	rm -f $(DESTDIR)/arizona
+	rm -f $(CONFDIR)/arizona.json
 
 compile:
 	@echo -e "\e[1mCompiling...\e[0m"
