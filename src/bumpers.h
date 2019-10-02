@@ -95,6 +95,7 @@ char * get_bumper (void)
 	
 	char * bumper_chance_char = get_value_from_json(config, "bumper-chance");
 	int bumper_chance = atoi(bumper_chance_char);
+	free(bumper_chance_char);
 	
 	int random_number = rand() % 101;
 	if ( random_number > bumper_chance )

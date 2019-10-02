@@ -36,7 +36,12 @@
 	"stream-url": "",
 	"stream-genre": "various",
 	"stream-desc": "Powered by Arizona (https://github.com/tlpr/arizona)",
-	"stream-irc": ""
+	"stream-irc": "",
+	
+	"6": "Logging",
+	"enable-logging": 0,
+	"log-file": "arizona.log",
+	"log-file-size-limit": 5000000
 
 }
 

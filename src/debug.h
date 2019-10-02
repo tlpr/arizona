@@ -12,6 +12,8 @@ int color, warnings_disabled;
 void i_output ( char *message, const char *status )
 {
 
+	append_log(message);
+	
 	char *use_color = get_value_from_json(config, "color");
 	color = atoi(use_color);
 

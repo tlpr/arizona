@@ -17,6 +17,7 @@
 struct json_object *config;
 
 #include "version.h"
+#include "logging.h"
 #include "debug.h"
 #include "dir.h"
 #include "bumpers.h"
@@ -29,6 +30,9 @@ int main ( int argc, char* argv[] )
 {
 
 	char *config_path = "";
+	
+	srand( time(NULL) );
+	rand();
 
 	if ( argc > 1 )
 	{
@@ -76,6 +80,8 @@ int main ( int argc, char* argv[] )
 	}
 
 	config = read_configuration(config_path);
+	
+	append_log("STARTING ARIZONA");
 	
 	char* use_color_char = get_value_from_json(config, "color");
 	int use_color = atoi(use_color_char);
