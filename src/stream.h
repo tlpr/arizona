@@ -273,6 +273,7 @@ void run_stream ()
 			i_output("Playing bumper...", "warning");
 			strcpy(full_path, bumper);
 			free(bumper);
+			bumper = NULL;
 			song_name = "Bumper";
 			i--;
 			

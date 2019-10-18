@@ -26,7 +26,7 @@ struct json_object *read_configuration (char *config_file_path)
 
 		else
 		{
-			printf("[Err]  Error accessing configuration file. Halting.\n");
+			printf("[Err] Error accessing configuration file. Halting.\n");
 			exit(0);
 		}
 
@@ -36,7 +36,7 @@ struct json_object *read_configuration (char *config_file_path)
 	FILE *config_file_obj = fopen(config_file_path, "r");
 	if ( !config_file_obj )
 	{
-		printf("Could not read the configuration file. Exiting...\n");
+		printf("[Err] Could not read the configuration file. Exiting...\n");
 		exit(0);
 	}
 	
@@ -57,6 +57,12 @@ struct json_object *read_configuration (char *config_file_path)
 	struct json_object *config_file_json;
 	config_file_json = json_tokener_parse(buffer);
 
+	if ( config_file_json == NULL )
+	{
+		printf("[Err] Error parsing the configuration file. Halting.\n");
+		exit(0);
+	}
+
 	return config_file_json;
 
 }
@@ -67,7 +73,8 @@ char *get_value_from_json ( struct json_object *configuration, char* key )
 
 	struct json_object *tmp;
 	json_object_object_get_ex(configuration, key, &tmp);
-	return (char*)json_object_get_string(tmp);
+	const char * value = json_object_get_string(tmp);
+	return (char *)value;
 
 }
 
